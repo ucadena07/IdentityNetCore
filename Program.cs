@@ -18,6 +18,12 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
 });
 
+builder.Services.ConfigureApplicationCookie(option =>
+{
+    option.LoginPath = "/Identity/Signin";
+    option.AccessDeniedPath = "/Identity/AccessDenied";
+});
+
 
 builder.Services.AddControllersWithViews();
 var app = builder.Build();
