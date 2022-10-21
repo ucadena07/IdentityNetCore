@@ -1,4 +1,5 @@
 ﻿using IdentityAndSecurity.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -18,6 +19,7 @@ namespace IdentityAndSecurity.Controllers
             return View();
         }
 
+        [Authorize]
         public IActionResult Member()
         {
             return View();
