@@ -112,5 +112,11 @@ namespace IdentityAndSecurity.Controllers
         {
             return View();
         }
+
+        public async Task<IActionResult> SignOut()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Signin");
+        }
     }
 }
