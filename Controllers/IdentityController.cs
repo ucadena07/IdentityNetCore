@@ -2,6 +2,8 @@
 using IdentityAndSecurity.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 
 namespace IdentityAndSecurity.Controllers
 {
@@ -9,11 +11,13 @@ namespace IdentityAndSecurity.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IEmailSender _mail;
+        private readonly SmtpOptions _options;
 
-        public IdentityController(UserManager<IdentityUser> userManager, IEmailSender mail)
+        public IdentityController(UserManager<IdentityUser> userManager, IEmailSender mail, IOptions<SmtpOptions> options)
         {
             _userManager = userManager;
             _mail = mail;
+            _options = options.Value;
         }
 
         public async Task<IActionResult> Signup()
@@ -37,7 +41,7 @@ namespace IdentityAndSecurity.Controllers
                     if (result.Succeeded)
                     {
                         var confirmationLink = Url.ActionLink("ConfirmEmail", "Identity", new { userId = user.Id, token = token });
-                        await _mail.SendEmailAsync("info@mydomain.com", user.Email, "Confirm your email address", confirmationLink);
+                        await _mail.SendEmailAsync(_options.Domain, user.Email, "Confirm your email address", confirmationLink);
                         return RedirectToAction("Signin");
                     }
                     ModelState.AddModelError("Signup",String.Join("", result.Errors.Select(it => it.Description)));
@@ -49,7 +53,16 @@ namespace IdentityAndSecurity.Controllers
 
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {
-            return new OkResult();
+            var user = await _userManager.FindByIdAsync(userId);
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Signin");
+            }
+
+
+            return new NotFoundResult();
         }
         public async Task<IActionResult> Signin()
         {
