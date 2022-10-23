@@ -11,15 +11,17 @@ namespace IdentityAndSecurity.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailSender _mail;
         private readonly SmtpOptions _options;
 
-        public IdentityController(UserManager<IdentityUser> userManager, IEmailSender mail, IOptions<SmtpOptions> options, SignInManager<IdentityUser> signInManager)
+        public IdentityController(UserManager<IdentityUser> userManager, IEmailSender mail, IOptions<SmtpOptions> options, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _mail = mail;
             _options = options.Value;
-            _signInManager = signInManager; 
+            _signInManager = signInManager;
+            _roleManager = roleManager; 
         }
 
         public async Task<IActionResult> Signup()
@@ -33,8 +35,22 @@ namespace IdentityAndSecurity.Controllers
         {
             if (ModelState.IsValid)
             {
+                if(!(await _roleManager.RoleExistsAsync(model.Role)))
+                {
+                    var role = new IdentityRole { Name = model.Role };
+                    var roleResult  = await _roleManager.CreateAsync(role);
+                    if(!roleResult.Succeeded)
+                    {
+                        var errors = roleResult.Errors.Select(it => it.Description);
+                        ModelState.AddModelError("Role", string.Join(",", errors));
+                        return View(model);
+                    }
+                }
+
+
                 if((await _userManager.FindByEmailAsync(model.Email) == null))
                 {
+
                     var user = new IdentityUser { Email = model.Email, UserName = model.Email };
                     var result = await _userManager.CreateAsync(user, model.Password);
                     user = await _userManager.FindByEmailAsync(model.Email);
@@ -44,6 +60,7 @@ namespace IdentityAndSecurity.Controllers
                     {
                         var confirmationLink = Url.ActionLink("ConfirmEmail", "Identity", new { userId = user.Id, token = token });
                         await _mail.SendEmailAsync(_options.Domain, user.Email, "Confirm your email address", confirmationLink);
+                        await _userManager.AddToRoleAsync(user,model.Role); 
                         return RedirectToAction("Signin");
                     }
                     ModelState.AddModelError("Signup",String.Join("", result.Errors.Select(it => it.Description)));
@@ -80,7 +97,7 @@ namespace IdentityAndSecurity.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe,false);
                 if (result.Succeeded)
                 {
-                    return RedirectToAction("Index");
+                    return Redirect("/");
                 }
                 else
                 {
@@ -91,7 +108,7 @@ namespace IdentityAndSecurity.Controllers
             }
             return View(model);
         }
-        public async Task<IActionResult> AccessDenied()
+        public IActionResult AccessDenied()
         {
             return View();
         }

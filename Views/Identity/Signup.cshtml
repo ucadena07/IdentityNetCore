@@ -12,6 +12,13 @@
         <label asp-for="Password">Password:</label>
         <input type="text" asp-for="Password" class="form-control" />
     </div>
+    <div class="form-group col-4">
+        <label asp-for="Role">Role:</label>
+        <select class="form-control" asp-for="Role">
+            <option value="Admin">Admin</option>
+            <option value="Member">Member</option>
+        </select>
+    </div>
     <button class="btn btn-primary" type="submit">Signup!</button>
 </form>
 
