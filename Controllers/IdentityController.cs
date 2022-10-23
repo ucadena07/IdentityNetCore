@@ -1,4 +1,5 @@
 ﻿using IdentityAndSecurity.Models;
+using IdentityAndSecurity.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,10 +8,12 @@ namespace IdentityAndSecurity.Controllers
     public class IdentityController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IEmailSender _mail;
 
-        public IdentityController(UserManager<IdentityUser> userManager)
+        public IdentityController(UserManager<IdentityUser> userManager, IEmailSender mail)
         {
             _userManager = userManager;
+            _mail = mail;
         }
 
         public async Task<IActionResult> Signup()
@@ -28,19 +31,30 @@ namespace IdentityAndSecurity.Controllers
                 {
                     var user = new IdentityUser { Email = model.Email, UserName = model.Email };
                     var result = await _userManager.CreateAsync(user, model.Password);
+                    user = await _userManager.FindByEmailAsync(model.Email);
+                    var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
                     if (result.Succeeded)
                     {
+                        var confirmationLink = Url.ActionLink("ConfirmEmail", "Identity", new { userId = user.Id, token = token });
+                        await _mail.SendEmailAsync("info@mydomain.com", user.Email, "Confirm your email address", confirmationLink);
                         return RedirectToAction("Signin");
                     }
-                    ModelState.AddModelError("Signup",String.Join(" ", result.Errors.Select(it => it.Description)));
+                    ModelState.AddModelError("Signup",String.Join("", result.Errors.Select(it => it.Description)));
                     return View(model);
                 }
             }
             return View(model);
         }
+
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            return new OkResult();
+        }
         public async Task<IActionResult> Signin()
         {
+         
+          
             return View();
         }
         public async Task<IActionResult> AccessDenied()

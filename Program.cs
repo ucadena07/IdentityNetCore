@@ -1,10 +1,12 @@
 using IdentityAndSecurity.Data;
+using IdentityAndSecurity.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
 opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -16,6 +18,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
+    options.SignIn.RequireConfirmedEmail = true;
 });
 
 builder.Services.ConfigureApplicationCookie(option =>
@@ -23,6 +26,8 @@ builder.Services.ConfigureApplicationCookie(option =>
     option.LoginPath = "/Identity/Signin";
     option.AccessDeniedPath = "/Identity/AccessDenied";
 });
+
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
 
 
 builder.Services.AddControllersWithViews();
