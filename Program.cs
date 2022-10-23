@@ -25,6 +25,7 @@ builder.Services.ConfigureApplicationCookie(option =>
 {
     option.LoginPath = "/Identity/Signin";
     option.AccessDeniedPath = "/Identity/AccessDenied";
+    option.ExpireTimeSpan = TimeSpan.FromHours(10);
 });
 
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));

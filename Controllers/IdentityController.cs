@@ -10,14 +10,16 @@ namespace IdentityAndSecurity.Controllers
     public class IdentityController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IEmailSender _mail;
         private readonly SmtpOptions _options;
 
-        public IdentityController(UserManager<IdentityUser> userManager, IEmailSender mail, IOptions<SmtpOptions> options)
+        public IdentityController(UserManager<IdentityUser> userManager, IEmailSender mail, IOptions<SmtpOptions> options, SignInManager<IdentityUser> signInManager)
         {
             _userManager = userManager;
             _mail = mail;
             _options = options.Value;
+            _signInManager = signInManager; 
         }
 
         public async Task<IActionResult> Signup()
@@ -64,11 +66,30 @@ namespace IdentityAndSecurity.Controllers
 
             return new NotFoundResult();
         }
-        public async Task<IActionResult> Signin()
+        public IActionResult Signin()
+        {       
+            
+            return View(new SigninDto());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Signin(SigninDto model)
         {
-         
-          
-            return View();
+            if (ModelState.IsValid)
+            {
+                var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe,false);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    ModelState.AddModelError("Login","Cannot login.");
+                    return View(model);
+                }
+
+            }
+            return View(model);
         }
         public async Task<IActionResult> AccessDenied()
         {
