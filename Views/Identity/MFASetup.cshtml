@@ -1,0 +1,15 @@
+﻿@model MFADto
+
+
+<p>Please enter the code below in your authenticator application</p>
+<p>
+    @Model.Token
+</p>
+
+<form asp-action="MFASetup" asp-controller="Identity" method="post">
+    <input type="hidden" asp-for="Token" />
+    <div class="form-group">
+        Enter Code: <input type="text" class="form-control" asp-for="Code"/>
+    </div>
+    <button class="btn btn-primary" type="submit">Submit</button>
+</form>

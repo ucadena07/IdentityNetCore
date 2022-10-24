@@ -1,5 +1,6 @@
 ﻿using IdentityAndSecurity.Models;
 using IdentityAndSecurity.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
@@ -68,6 +69,36 @@ namespace IdentityAndSecurity.Controllers
                     }
                     ModelState.AddModelError("Signup",String.Join("", result.Errors.Select(it => it.Description)));
                     return View(model);
+                }
+            }
+            return View(model);
+        }
+        public async Task<IActionResult> MFASetup()
+        {
+            
+            var user = await _userManager.GetUserAsync(User);
+            await _userManager.ResetAuthenticatorKeyAsync(user);
+            var token = await _userManager.GetAuthenticatorKeyAsync(user);
+            var model = new MFADto() { Token = token};
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> MFASetup(MFADto model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                var succeded = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, model.Code);
+
+                if (succeded)
+                {
+                    await _userManager.SetTwoFactorEnabledAsync(user, true);
+                }
+                else
+                {
+                    ModelState.AddModelError("Verify", "Your MFA code could not be validated.");
                 }
             }
             return View(model);
