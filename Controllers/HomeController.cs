@@ -19,13 +19,14 @@ namespace IdentityAndSecurity.Controllers
             return View();
         }
 
-        [Authorize]
+        [Authorize(Policy = "member")]
         public IActionResult Member()
         {
             return View();
         }
 
-        [Authorize(Roles ="Admin")]
+        [Authorize(Policy = "AdminDep")]
+       
         public IActionResult Admin()
         {
             return View();

@@ -30,6 +30,17 @@ builder.Services.ConfigureApplicationCookie(option =>
 
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
 
+builder.Services.AddAuthorization(opt =>
+{
+    opt.AddPolicy("AdminDep", p =>
+    {
+        p.RequireClaim("Department","Tech").RequireRole("Admin");
+    });
+    opt.AddPolicy("member", p =>
+    {
+        p.RequireClaim("Department", "Accounting");
+    });
+});
 
 builder.Services.AddControllersWithViews();
 var app = builder.Build();
