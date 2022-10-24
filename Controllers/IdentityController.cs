@@ -75,11 +75,15 @@ namespace IdentityAndSecurity.Controllers
         }
         public async Task<IActionResult> MFASetup()
         {
+            const string provider = "aspnetidentity";
             
             var user = await _userManager.GetUserAsync(User);
             await _userManager.ResetAuthenticatorKeyAsync(user);
             var token = await _userManager.GetAuthenticatorKeyAsync(user);
-            var model = new MFADto() { Token = token};
+            var qrCodeUrl = $"otpauth://totp/{provider}:{user.Email}?secret={token}&issuer={provider}&digits=6";
+
+
+            var model = new MFADto() { Token = token, QRCodeUrl = qrCodeUrl};
             return View(model);
         }
 
@@ -99,6 +103,25 @@ namespace IdentityAndSecurity.Controllers
                 else
                 {
                     ModelState.AddModelError("Verify", "Your MFA code could not be validated.");
+                }
+            }
+            return View(model);
+        }
+
+        public IActionResult MFACheck()
+        {
+            return View(new MNFACheckViewModel());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MFACheck(MNFACheckViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(model.Code, false, false);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home", null);
                 }
             }
             return View(model);
@@ -129,6 +152,10 @@ namespace IdentityAndSecurity.Controllers
             if (ModelState.IsValid)
             {
                 var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe,false);
+                if (result.RequiresTwoFactor)
+                {
+                    return RedirectToAction("MFACheck");
+                }
                 if (result.Succeeded)
                 {
                     return Redirect("/");

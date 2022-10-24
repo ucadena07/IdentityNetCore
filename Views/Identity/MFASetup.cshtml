@@ -11,5 +11,15 @@
     <div class="form-group">
         Enter Code: <input type="text" class="form-control" asp-for="Code"/>
     </div>
+    <p>
+        Alternatively, scan the code below
+    </p>
+    <div id="qrcode"></div>
     <button class="btn btn-primary" type="submit">Submit</button>
 </form>
+
+@section Scripts {
+    <script type="text/javascript">
+        new QRCode(document.getElementById("qrcode"), "@Model.QRCodeUrl");
+    </script>
+}

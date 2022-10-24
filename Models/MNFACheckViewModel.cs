@@ -2,12 +2,9 @@
 
 namespace IdentityAndSecurity.Models
 {
-    public class MFADto
+    public class MNFACheckViewModel
     {
         [Required]
-        public string Token { get; set; }
-        [Required]
         public string Code { get; set; }
-        public string QRCodeUrl { get; set; }
     }
 }
