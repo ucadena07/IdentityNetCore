@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
 
 namespace IdentityAndSecurity.Controllers
 {
@@ -60,7 +61,9 @@ namespace IdentityAndSecurity.Controllers
                     {
                         var confirmationLink = Url.ActionLink("ConfirmEmail", "Identity", new { userId = user.Id, token = token });
                         await _mail.SendEmailAsync(_options.Domain, user.Email, "Confirm your email address", confirmationLink);
-                        await _userManager.AddToRoleAsync(user,model.Role); 
+                        await _userManager.AddToRoleAsync(user,model.Role);
+                        var claim = new Claim("Department", model.Department);
+                        await _userManager.AddClaimAsync(user, claim);  
                         return RedirectToAction("Signin");
                     }
                     ModelState.AddModelError("Signup",String.Join("", result.Errors.Select(it => it.Description)));

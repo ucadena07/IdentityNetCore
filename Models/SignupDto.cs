@@ -13,5 +13,6 @@ namespace IdentityAndSecurity.Models
 
         [Required]
         public string Role { get; set; }
+        public string Department { get; set; }
     }
 }
