@@ -179,5 +179,20 @@ namespace IdentityAndSecurity.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Signin");
         }
+
+        [HttpPost]
+        public IActionResult ExternalLogin(string provider, string returnUrl = null)
+        {
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, returnUrl);
+            var callbackUrl = Url.Action("ExternalLoginCallback");
+            properties.RedirectUri = callbackUrl;   
+            return Challenge(properties, provider);
+        }
+
+
+        public IActionResult ExternalLoginCallback()
+        {
+            return View();
+        }
     }
 }

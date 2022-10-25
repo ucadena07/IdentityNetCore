@@ -1,4 +1,9 @@
 ﻿@model SigninDto
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> _signInManager
+@{
+    var providers = await _signInManager.GetExternalAuthenticationSchemesAsync();
+}
 
 <form asp-action="Signin" method="post">
     @Html.ValidationSummary()
@@ -17,4 +22,14 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Sign In</button>
+</form>
+<p>Login with  your social media account</p>
+<form asp-action="ExternalLogin" method="post">
+    <div class="form-group">
+        @foreach (var provider in providers)
+        {
+            <button type="submit" name="provider" value="@provider.Name" class="btn btn-primary">@provider.DisplayName</button>
+        }
+
+    </div>
 </form>

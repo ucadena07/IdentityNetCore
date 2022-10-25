@@ -7,6 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+builder.Services.AddAuthentication().AddFacebook(opt =>
+{
+    opt.AppId = builder.Configuration["FaceAppId"];
+    opt.AppSecret = builder.Configuration["FacebookAppSecret"];
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
 opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
