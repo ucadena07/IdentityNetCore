@@ -2,6 +2,9 @@ using IdentityAndSecurity.Data;
 using IdentityAndSecurity.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +48,22 @@ builder.Services.AddAuthorization(opt =>
     {
         p.RequireClaim("Department", "Accounting");
     });
+});
+
+var issuer = builder.Configuration["Tokens:Issuer"];
+var audience = builder.Configuration["Tokens:Audience"];
+var key = builder.Configuration["Tokens:Key"];
+
+builder.Services.AddAuthentication().AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new()
+    {
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+};
 });
 
 builder.Services.AddControllersWithViews();
